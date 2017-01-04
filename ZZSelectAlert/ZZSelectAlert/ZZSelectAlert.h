@@ -1,9 +1,9 @@
 //
-//  SelectAlert.h
-//  SelectAlertDemo
+//  ZZSelectAlert.h
+//  ZZSelectAlert
 //
-//  Created by apple on 2016/11/24.
-//  Copyright © 2016年 周兴. All rights reserved.
+//  Created by iMac on 2017/1/4.
+//  Copyright © 2017年 zhouxing. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -12,7 +12,7 @@ typedef void (^SelectIndex)(NSInteger selectIndex);//编码
 typedef void (^SelectValue)(NSString *selectValue);//数值
 
 
-@interface SelectAlert : UIView<UITableViewDelegate,UITableViewDataSource>
+@interface ZZSelectAlert : UIView<UITableViewDelegate,UITableViewDataSource>
 
 @property (nonatomic, strong) NSArray *titles;//string数组
 
@@ -32,7 +32,7 @@ typedef void (^SelectValue)(NSString *selectValue);//数值
  * @param showCloseButton 显示关闭按钮则关闭点击列表外remove弹窗的功能
  *
  */
-+ (SelectAlert *)showWithTitle:(NSString *)title
++ (ZZSelectAlert *)showWithTitle:(NSString *)title
                         titles:(NSArray *)titles
                    selectIndex:(SelectIndex)selectIndex
                    selectValue:(SelectValue)selectValue

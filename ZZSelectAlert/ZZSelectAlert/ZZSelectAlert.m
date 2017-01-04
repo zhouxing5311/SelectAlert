@@ -1,20 +1,22 @@
 //
-//  SelectAlert.m
-//  SelectAlertDemo
+//  ZZSelectAlert.m
+//  ZZSelectAlert
 //
-//  Created by apple on 2016/11/24.
-//  Copyright © 2016年 周兴. All rights reserved.
+//  Created by iMac on 2017/1/4.
+//  Copyright © 2017年 zhouxing. All rights reserved.
 //
 
-#import "SelectAlert.h"
+#import "ZZSelectAlert.h"
 
-@interface SelectAlertCell : UITableViewCell
+#define ZZRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
+
+@interface ZZSelectAlertCell : UITableViewCell
 
 @property (nonatomic, strong) UILabel *titleLabel;
 
 @end
 
-@implementation SelectAlertCell
+@implementation ZZSelectAlertCell
 
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
@@ -41,7 +43,7 @@
 @end
 
 
-@interface SelectAlert ()
+@interface ZZSelectAlert ()
 
 @property (nonatomic, assign) BOOL showCloseButton;//是否显示关闭按钮
 @property (nonatomic, strong) UIView *alertView;//弹框视图
@@ -49,25 +51,24 @@
 
 @end
 
-@implementation SelectAlert
+@implementation ZZSelectAlert
 {
-    float alertHeight;//弹框整体高度，默认250
-    float buttonHeight;//按钮高度，默认40
+    float buttonHeight;//按钮高度及单元格高度，默认40
 }
 
-+ (SelectAlert *)showWithTitle:(NSString *)title
++ (ZZSelectAlert *)showWithTitle:(NSString *)title
                         titles:(NSArray *)titles
                    selectIndex:(SelectIndex)selectIndex
                    selectValue:(SelectValue)selectValue
                showCloseButton:(BOOL)showCloseButton {
-    SelectAlert *alert = [[SelectAlert alloc] initWithTitle:title titles:titles selectIndex:selectIndex selectValue:selectValue showCloseButton:showCloseButton];
+    ZZSelectAlert *alert = [[ZZSelectAlert alloc] initWithTitle:title titles:titles selectIndex:selectIndex selectValue:selectValue showCloseButton:showCloseButton];
     return alert;
 }
 
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] init];
-        _titleLabel.backgroundColor = [UIColor colorWithRed:235/255.0 green:235/255.0 blue:235/255.0 alpha:1];
+        _titleLabel.backgroundColor = ZZRGB(0xebebeb);
         _titleLabel.textColor = [UIColor blackColor];
         _titleLabel.font = [UIFont boldSystemFontOfSize:17];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -88,7 +89,7 @@
 - (UIButton *)closeButton {
     if (!_closeButton) {
         _closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _closeButton.backgroundColor = [UIColor colorWithRed:235/255.0 green:235/255.0 blue:235/255.0 alpha:1];
+        _closeButton.backgroundColor = ZZRGB(0xebebeb);
         [_closeButton setTitle:@"关闭" forState:UIControlStateNormal];
         [_closeButton setTitleColor:[UIColor colorWithRed:0 green:127/255.0 blue:1 alpha:1] forState:UIControlStateNormal];
         _closeButton.titleLabel.font = [UIFont systemFontOfSize:17];
@@ -109,7 +110,6 @@
 - (instancetype)initWithTitle:(NSString *)title titles:(NSArray *)titles selectIndex:(SelectIndex)selectIndex selectValue:(SelectValue)selectValue showCloseButton:(BOOL)showCloseButton {
     if (self = [super init]) {
         self.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:.4];
-        alertHeight = 250;
         buttonHeight = 40;
         
         self.titleLabel.text = title;
@@ -134,14 +134,38 @@
     self.frame = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height);
     [[UIApplication sharedApplication].keyWindow addSubview:self];
     
-    self.alertView.alpha = 0.0;
-    [UIView animateWithDuration:0.05 animations:^{
-        self.alertView.alpha = 1;
-    }];
+    //动画弹出效果
+    CAKeyframeAnimation *popAnimation = [CAKeyframeAnimation animationWithKeyPath:@"transform"];
+    popAnimation.duration = 0.3;
+    popAnimation.values = @[[NSValue valueWithCATransform3D:CATransform3DMakeScale(0.01f, 0.01f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.1f, 1.1f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.9f, 0.9f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DIdentity]];
+    popAnimation.keyTimes = @[@0.0f, @0.5f, @0.75f, @1.0f];
+    popAnimation.timingFunctions = @[[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                     [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                     [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+    [self.alertView.layer addAnimation:popAnimation forKey:nil];
+    
 }
 
 - (void)initUI {
-    self.alertView.frame = CGRectMake(50, ([UIScreen mainScreen].bounds.size.height-alertHeight)/2.0, [UIScreen mainScreen].bounds.size.width-100, alertHeight);
+    
+    float itemHeight = _titles.count>5?40:50;
+    
+    //内容视图高度。
+    float contentHeight = _titles.count==0?itemHeight:(float)_titles.count*itemHeight;
+    
+    float closeButtonHeight = _showCloseButton==YES?buttonHeight:0;
+    
+    //超过屏幕高度则减少高度
+    if (contentHeight > [UIScreen mainScreen].bounds.size.height-buttonHeight-closeButtonHeight-40) {
+        contentHeight = (int)(([UIScreen mainScreen].bounds.size.height-buttonHeight-closeButtonHeight-40)/itemHeight)*itemHeight;
+    }
+    
+    float autoHeight = buttonHeight + contentHeight + closeButtonHeight;
+    
+    self.alertView.frame = CGRectMake(50, ([UIScreen mainScreen].bounds.size.height-autoHeight)/2.0, [UIScreen mainScreen].bounds.size.width-100, autoHeight);
     self.titleLabel.frame = CGRectMake(0, 0, _alertView.frame.size.width, buttonHeight);
     float reduceHeight = buttonHeight;
     if (_showCloseButton) {
@@ -162,11 +186,8 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    float real = (alertHeight - buttonHeight)/(float)_titles.count;
-    if (_showCloseButton) {
-        real = (alertHeight - buttonHeight*2)/(float)_titles.count;
-    }
-    return real<=40?40:real;
+    
+    return _titles.count>5?40:50;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -178,9 +199,9 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    SelectAlertCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selectcell"];
+    ZZSelectAlertCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ZZSelectAlertCell"];
     if (!cell) {
-        cell = [[SelectAlertCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"selectcell"];
+        cell = [[ZZSelectAlertCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"ZZSelectAlertCell"];
     }
     cell.titleLabel.text = _titles[indexPath.row];
     return cell;
@@ -214,7 +235,7 @@
 }
 
 - (void)dealloc {
-//    NSLog(@"SelectAlert被销毁了");
+    //    NSLog(@"SelectAlert被销毁了");
 }
 
 @end
