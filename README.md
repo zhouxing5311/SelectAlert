@@ -10,9 +10,9 @@ ZZSelectAlert拷贝至项目工程，导入ZZSelectAlert.h。</br>
 ```Objective-c
 
 [ZZSelectAlert showWithTitle:@"标题" titles:@[@"标题1",@"标题2",@"标题3",@"标题4"] selectIndex:^(NSInteger selectIndex) {
-NSLog(@"选择的index:%ld",selectIndex);
+    NSLog(@"选择的index:%ld",selectIndex);
 } selectValue:^(NSString *selectValue) {
-NSLog(@"选择的文本:%@",selectValue);
+    NSLog(@"选择的文本:%@",selectValue);
 } showCloseButton:YES];
 
 ```
